@@ -3,6 +3,7 @@ import { GetServerSidePropsContext } from 'next'
 import React from 'react'
 import safeJsonStringify from 'safe-json-stringify'
 import { Community } from '../../../atoms/communitiesAtom'
+import Header from '../../../components/Community/Header'
 import CommunityNotFound from '../../../components/Community/NotFound'
 import { firestore } from '../../../firebase/clientApp'
 type CommunityPageProps = {
@@ -13,7 +14,11 @@ const CommunityPage: React.FC<CommunityPageProps> = ({ communityData }) => {
   if (!communityData) {
     return <CommunityNotFound />
   }
-  return <div>Welcome to {communityData.id}</div>
+  return (
+    <>
+      <Header communityData={communityData} />
+    </>
+  )
 }
 
 export async function getServerSideProps(context: GetServerSidePropsContext) {
