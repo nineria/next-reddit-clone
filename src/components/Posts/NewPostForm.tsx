@@ -68,7 +68,7 @@ const NewPostForm: React.FC<NewPostFormProps> = ({ user }) => {
   })
   const [selectedFile, setSelectedFile] = useState<string>()
   const [loading, setLoading] = useState(false)
-  const [createPostError, setCreatePostError] = useState(false)
+  const [error, setError] = useState(false)
 
   const handleCreatePost = async () => {
     const { communityId } = router.query
@@ -105,7 +105,7 @@ const NewPostForm: React.FC<NewPostFormProps> = ({ user }) => {
       router.back()
     } catch (error: any) {
       console.log('handleCreatePost Error: ', error.message)
-      setCreatePostError(true)
+      setError(true)
     }
     setLoading(false)
   }
@@ -169,7 +169,7 @@ const NewPostForm: React.FC<NewPostFormProps> = ({ user }) => {
           />
         )}
       </Flex>
-      {createPostError && (
+      {error && (
         <Alert status='error'>
           <AlertIcon />
           <Text mr={2}>Error creating post</Text>
