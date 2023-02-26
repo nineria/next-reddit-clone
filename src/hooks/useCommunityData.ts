@@ -140,7 +140,12 @@ const useCommunityData = () => {
   }
 
   useEffect(() => {
-    if (!user) return
+    if (!user) {
+      return setCommunityStateValue((prev) => ({
+        ...prev,
+        mySnippets: [],
+      }))
+    }
     getMySnippets()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user])
