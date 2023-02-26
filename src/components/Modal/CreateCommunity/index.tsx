@@ -31,24 +31,26 @@ import { auth, firestore } from '../../../firebase/clientApp'
 type CreateCommunityModalProps = {
   open: boolean
   handleClose: () => void
+  userId: string
 }
 
 const CreateCommunityModal: React.FC<CreateCommunityModalProps> = ({
   open,
   handleClose,
+  userId,
 }) => {
   const [user] = useAuthState(auth)
-  const [communityName, setCommunityName] = useState('')
+  const [name, setName] = useState('')
   const [charsRemaining, setCharsRemaining] = useState(21)
   const [communityType, setCommunityType] = useState('public')
-  const [error, setError] = useState('')
+  const [nameError, setNameError] = useState('')
   const [loading, setLoading] = useState(false)
 
   const handleChange = ({
     target: { value },
   }: React.ChangeEvent<HTMLInputElement>) => {
     if (value.length > 21) return
-    setCommunityName(value)
+    setName(value)
     setCharsRemaining(21 - value.length)
   }
 
@@ -59,11 +61,11 @@ const CreateCommunityModal: React.FC<CreateCommunityModalProps> = ({
   }
 
   const handleCreateCommunity = async () => {
-    if (error) setError('')
+    if (nameError) setNameError('')
     // validate community name
     const format = /[ `!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~]/
-    if (format.test(communityName) || communityName.length < 3) {
-      setError(
+    if (format.test(name) || name.length < 3) {
+      setNameError(
         'Community name must be between 3-21 characters, and can only contain letter, number, or underscored'
       )
       return
@@ -72,35 +74,35 @@ const CreateCommunityModal: React.FC<CreateCommunityModalProps> = ({
     setLoading(true)
 
     try {
-      const communityDocRef = doc(firestore, 'communities', communityName)
+      const communityDocRef = doc(firestore, 'communities', name)
 
       await runTransaction(firestore, async (transaction) => {
         // Check if community exists in db
         const communityDoc = await transaction.get(communityDocRef)
         if (communityDoc.exists()) {
-          throw new Error(`Sorry, r/${communityName} is taken, Try another`)
+          throw new Error(`Sorry, r/${name} is taken, Try another`)
         }
 
         // create community
         transaction.set(communityDocRef, {
-          creatorId: user?.uid,
+          creatorId: userId,
           createdAt: serverTimestamp(),
           numberOfMember: 1,
           privacyType: communityType,
         })
 
-        // create communitySnipped on user
+        // create communitySnippets on user
         transaction.set(
-          doc(firestore, `users/${user?.uid}/communitySnipped`, communityName),
+          doc(firestore, `users/${userId}/communitySnippets`, name),
           {
-            communityId: communityName,
+            communityId: name,
             isModerator: true,
           }
         )
       })
     } catch (error: any) {
       console.log('handleCreateCommunity Error: ' + error)
-      setError(error.message)
+      setNameError(error.message)
     }
 
     setLoading(false)
@@ -139,7 +141,7 @@ const CreateCommunityModal: React.FC<CreateCommunityModalProps> = ({
               </Text>
               <Input
                 position='relative'
-                value={communityName}
+                value={name}
                 size='sm'
                 pl='22px'
                 onChange={handleChange}
@@ -151,7 +153,7 @@ const CreateCommunityModal: React.FC<CreateCommunityModalProps> = ({
                 {charsRemaining} Characters remaining
               </Text>
               <Text fontSize='9pt' color='red' pt={1}>
-                {error}
+                {nameError}
               </Text>
               <Box my={4}>
                 <Text fontWeight={600} fontSize={15}>

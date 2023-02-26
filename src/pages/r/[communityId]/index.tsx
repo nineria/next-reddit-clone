@@ -3,8 +3,10 @@ import { GetServerSidePropsContext } from 'next'
 import React from 'react'
 import safeJsonStringify from 'safe-json-stringify'
 import { Community } from '../../../atoms/communitiesAtom'
+import CreatePostLink from '../../../components/Community/CreatePostLink'
 import Header from '../../../components/Community/Header'
 import CommunityNotFound from '../../../components/Community/NotFound'
+import PageContent from '../../../components/Layout/PageContent'
 import { firestore } from '../../../firebase/clientApp'
 type CommunityPageProps = {
   communityData: Community
@@ -17,6 +19,14 @@ const CommunityPage: React.FC<CommunityPageProps> = ({ communityData }) => {
   return (
     <>
       <Header communityData={communityData} />
+      <PageContent>
+        <>
+          <CreatePostLink />
+        </>
+        <>
+          <div>RIGHT</div>
+        </>
+      </PageContent>
     </>
   )
 }
