@@ -13,7 +13,7 @@ const Communities: React.FC<CommunitiesProps> = () => {
   return (
     <>
       <CreateCommunityModal
-        open={open}
+        isOpen={open}
         handleClose={() => setOpen(false)}
         userId={user?.uid!}
       />

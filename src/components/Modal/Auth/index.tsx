@@ -10,8 +10,9 @@ import {
 } from '@chakra-ui/react'
 import React, { useEffect } from 'react'
 import { useAuthState } from 'react-firebase-hooks/auth'
-import { useRecoilState } from 'recoil'
+import { useRecoilState, useRecoilValue } from 'recoil'
 import { authModalState } from '../../../atoms/authModalAtom'
+import { userState } from '../../../atoms/userAtom'
 import { auth } from '../../../firebase/clientApp'
 import AuthInputs from './AuthInputs'
 import OAuthButtons from './OAuthButtons'
@@ -19,13 +20,21 @@ import ResetPassword from './ResetPassword'
 
 const AuthModal: React.FC = () => {
   const [modalState, setModalState] = useRecoilState(authModalState)
-  const [user, loading, error] = useAuthState(auth)
+  const currentUser = useRecoilValue(userState)
+  const [user, error] = useAuthState(auth)
 
   const handleClose = () => {
     setModalState((prev) => ({
       ...prev,
       open: false,
     }))
+  }
+
+  const toggleView = (view: string) => {
+    setModalState({
+      ...modalState,
+      view: view as typeof modalState.view,
+    })
   }
 
   useEffect(() => {
@@ -67,7 +76,7 @@ const AuthModal: React.FC = () => {
                   <Text color='gray.500' fontWeight={700}>
                     OR
                   </Text>
-                  <AuthInputs />
+                  <AuthInputs toggleView={toggleView} />
                 </>
               )}
               {modalState.view === 'resetPassword' && <ResetPassword />}

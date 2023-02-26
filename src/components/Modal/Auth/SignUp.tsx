@@ -1,41 +1,42 @@
 import { Button, Flex, Input, Text } from '@chakra-ui/react'
 import { User } from 'firebase/auth'
-import { addDoc, collection } from 'firebase/firestore'
+import { addDoc, collection, doc, setDoc } from 'firebase/firestore'
 import React, { useEffect, useState } from 'react'
 import { useCreateUserWithEmailAndPassword } from 'react-firebase-hooks/auth'
 import { useSetRecoilState } from 'recoil'
-import { authModalState } from '../../../atoms/authModalAtom'
+import { authModalState, ModalView } from '../../../atoms/authModalAtom'
 import { auth, firestore } from '../../../firebase/clientApp'
 import { FIREBASE_ERROR } from '../../../firebase/errors'
 
-const SignUp: React.FC = () => {
+type SignUpProps = {
+  toggleView: (view: ModalView) => void
+}
+
+const SignUp: React.FC<SignUpProps> = ({ toggleView }) => {
   const setAuthModalState = useSetRecoilState(authModalState)
   const [form, setForm] = useState({
     email: '',
     password: '',
     confirmPassword: '',
   })
-  const [error, setError] = useState('')
-
+  const [formError, setFormError] = useState('')
   const [createUserWithEmailAndPassword, userCred, loading, userError] =
     useCreateUserWithEmailAndPassword(auth)
 
   // Firebase
   const onSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    if (error) setError('')
-    if (form.password !== form.confirmPassword) {
-      setError('Password do not match')
-      return
+    if (formError) setFormError('')
+    if (!form.email.includes('@')) {
+      return setFormError('Press enter a valid email')
     }
-    createUserWithEmailAndPassword(form.email, form.password)
-  }
 
-  const createUserDocument = async (user: User) => {
-    await addDoc(
-      collection(firestore, 'users'),
-      JSON.parse(JSON.stringify(user))
-    )
+    if (form.password !== form.confirmPassword) {
+      return setFormError('Password do not match')
+    }
+
+    // valid form inputs
+    createUserWithEmailAndPassword(form.email, form.password)
   }
 
   const onChange = ({
@@ -45,6 +46,11 @@ const SignUp: React.FC = () => {
       ...prev,
       [name]: value,
     }))
+  }
+
+  const createUserDocument = async (user: User) => {
+    const userDocRef = doc(firestore, 'users', user.uid)
+    await setDoc(userDocRef, JSON.parse(JSON.stringify(user)))
   }
 
   useEffect(() => {
@@ -59,7 +65,7 @@ const SignUp: React.FC = () => {
         required
         name='email'
         placeholder='Email'
-        type='email'
+        type='text'
         mb={2}
         fontSize='10pt'
         _placeholder={{ color: 'gray.500' }}
@@ -122,7 +128,7 @@ const SignUp: React.FC = () => {
         onChange={onChange}
       />
       <Text textAlign='center' color='red' fontSize='10pt'>
-        {error ||
+        {formError ||
           FIREBASE_ERROR[userError?.message as keyof typeof FIREBASE_ERROR]}
       </Text>
       <Button
@@ -140,12 +146,7 @@ const SignUp: React.FC = () => {
           color='blue.500'
           fontWeight={400}
           cursor='pointer'
-          onClick={() =>
-            setAuthModalState((prev) => ({
-              ...prev,
-              view: 'login',
-            }))
-          }
+          onClick={() => toggleView('login')}
         >
           LOG IN
         </Text>

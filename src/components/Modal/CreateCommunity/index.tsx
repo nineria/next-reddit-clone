@@ -15,36 +15,33 @@ import {
   Stack,
   Text,
 } from '@chakra-ui/react'
-import {
-  doc,
-  getDoc,
-  runTransaction,
-  serverTimestamp,
-  setDoc,
-} from 'firebase/firestore'
+import { doc, runTransaction, serverTimestamp } from 'firebase/firestore'
+import { useRouter } from 'next/router'
 import React, { useState } from 'react'
-import { useAuthState } from 'react-firebase-hooks/auth'
 import { BsFillEyeFill, BsFillPersonFill } from 'react-icons/bs'
 import { HiLockClosed } from 'react-icons/hi'
-import { auth, firestore } from '../../../firebase/clientApp'
+import { useSetRecoilState } from 'recoil'
+import { communityState } from '../../../atoms/communitiesAtom'
+import { firestore } from '../../../firebase/clientApp'
 
 type CreateCommunityModalProps = {
-  open: boolean
+  isOpen: boolean
   handleClose: () => void
   userId: string
 }
 
 const CreateCommunityModal: React.FC<CreateCommunityModalProps> = ({
-  open,
+  isOpen,
   handleClose,
   userId,
 }) => {
-  const [user] = useAuthState(auth)
+  const setSnippetState = useSetRecoilState(communityState)
   const [name, setName] = useState('')
   const [charsRemaining, setCharsRemaining] = useState(21)
-  const [communityType, setCommunityType] = useState('public')
   const [nameError, setNameError] = useState('')
+  const [communityType, setCommunityType] = useState('public')
   const [loading, setLoading] = useState(false)
+  const router = useRouter()
 
   const handleChange = ({
     target: { value },
@@ -54,28 +51,19 @@ const CreateCommunityModal: React.FC<CreateCommunityModalProps> = ({
     setCharsRemaining(21 - value.length)
   }
 
-  const onCommunityTypeChange = ({
-    target: { name },
-  }: React.ChangeEvent<HTMLInputElement>) => {
-    setCommunityType(name)
-  }
-
   const handleCreateCommunity = async () => {
     if (nameError) setNameError('')
     // validate community name
     const format = /[ `!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~]/
     if (format.test(name) || name.length < 3) {
-      setNameError(
+      return setNameError(
         'Community name must be between 3-21 characters, and can only contain letter, number, or underscored'
       )
-      return
     }
 
     setLoading(true)
-
     try {
       const communityDocRef = doc(firestore, 'communities', name)
-
       await runTransaction(firestore, async (transaction) => {
         // Check if community exists in db
         const communityDoc = await transaction.get(communityDocRef)
@@ -83,11 +71,11 @@ const CreateCommunityModal: React.FC<CreateCommunityModalProps> = ({
           throw new Error(`Sorry, r/${name} is taken, Try another`)
         }
 
-        // create community
+        // create a community
         transaction.set(communityDocRef, {
           creatorId: userId,
           createdAt: serverTimestamp(),
-          numberOfMember: 1,
+          numberOfMembers: 1,
           privacyType: communityType,
         })
 
@@ -105,12 +93,24 @@ const CreateCommunityModal: React.FC<CreateCommunityModalProps> = ({
       setNameError(error.message)
     }
 
+    setSnippetState((prev) => ({
+      ...prev,
+      mySnippets: [],
+    }))
+    handleClose()
+    router.push(`/r/${name}`)
     setLoading(false)
+  }
+
+  const onCommunityTypeChange = ({
+    target: { name },
+  }: React.ChangeEvent<HTMLInputElement>) => {
+    setCommunityType(name)
   }
 
   return (
     <>
-      <Modal isOpen={open} onClose={handleClose} size='lg'>
+      <Modal isOpen={isOpen} onClose={handleClose} size='lg'>
         <ModalOverlay />
         <ModalContent>
           <ModalHeader

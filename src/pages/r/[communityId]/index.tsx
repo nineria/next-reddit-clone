@@ -1,11 +1,13 @@
 import { doc, getDoc } from 'firebase/firestore'
 import { GetServerSidePropsContext } from 'next'
-import React from 'react'
+import React, { useEffect } from 'react'
+import { useSetRecoilState } from 'recoil'
 import safeJsonStringify from 'safe-json-stringify'
-import { Community } from '../../../atoms/communitiesAtom'
+import { Community, communityState } from '../../../atoms/communitiesAtom'
+import About from '../../../components/Community/About'
 import CreatePostLink from '../../../components/Community/CreatePostLink'
 import Header from '../../../components/Community/Header'
-import CommunityNotFound from '../../../components/Community/NotFound'
+import NotFound from '../../../components/Community/NotFound'
 import PageContent from '../../../components/Layout/PageContent'
 import Posts from '../../../components/Posts'
 import { firestore } from '../../../firebase/clientApp'
@@ -14,9 +16,19 @@ type CommunityPageProps = {
 }
 
 const CommunityPage: React.FC<CommunityPageProps> = ({ communityData }) => {
+  const setCommunityStateValue = useSetRecoilState(communityState)
+
   if (!communityData) {
-    return <CommunityNotFound />
+    return <NotFound />
   }
+
+  useEffect(() => {
+    setCommunityStateValue((prev) => ({
+      ...prev,
+      currentCommunity: communityData,
+    }))
+  }, [])
+
   return (
     <>
       <Header communityData={communityData} />
@@ -25,7 +37,8 @@ const CommunityPage: React.FC<CommunityPageProps> = ({ communityData }) => {
           <CreatePostLink />
           <Posts communityData={communityData} />
         </>
-        <div>RIGHT</div>
+
+        <About communityData={communityData} />
       </PageContent>
     </>
   )
@@ -45,7 +58,7 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
       props: {
         communityData: communityDoc.exists()
           ? JSON.parse(
-              safeJsonStringify({ id: communityDoc.id, ...communityDoc.data })
+              safeJsonStringify({ id: communityDoc.id, ...communityDoc.data() })
             )
           : '',
       },
@@ -53,6 +66,9 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
   } catch (error: any) {
     // Could add error page here
     console.log('getServerSideProps Error: ', error.message)
+    return {
+      props: {},
+    }
   }
 }
 
