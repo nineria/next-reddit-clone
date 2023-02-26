@@ -60,7 +60,7 @@ const useCommunityData = () => {
 
       // setCommunityStateValue()
     } catch (error: any) {
-      console.log('getMySnippets Error: ', error)
+      console.log('getMySnippets Error: ', error.message)
       setError(error.message)
     }
     setLoading(false)
@@ -102,7 +102,7 @@ const useCommunityData = () => {
 
       setLoading(false)
     } catch (error: any) {
-      console.log('joinCommunity Error: ', error)
+      console.log('joinCommunity Error: ', error.message)
       setError(error.message)
     }
   }
@@ -133,7 +133,7 @@ const useCommunityData = () => {
         ),
       }))
     } catch (error: any) {
-      console.log('leaveCommunity Error: ', error)
+      console.log('leaveCommunity Error: ', error.message)
       setError(error.message)
     }
     setLoading(false)
