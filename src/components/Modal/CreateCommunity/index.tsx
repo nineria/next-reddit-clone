@@ -18,23 +18,23 @@ import {
 import { doc, runTransaction, serverTimestamp } from 'firebase/firestore'
 import { useRouter } from 'next/router'
 import React, { useState } from 'react'
+import { useAuthState } from 'react-firebase-hooks/auth'
 import { BsFillEyeFill, BsFillPersonFill } from 'react-icons/bs'
 import { HiLockClosed } from 'react-icons/hi'
 import { useSetRecoilState } from 'recoil'
 import { communityState } from '../../../atoms/communitiesAtom'
-import { firestore } from '../../../firebase/clientApp'
+import { auth, firestore } from '../../../firebase/clientApp'
 
 type CreateCommunityModalProps = {
   isOpen: boolean
   handleClose: () => void
-  userId: string
 }
 
 const CreateCommunityModal: React.FC<CreateCommunityModalProps> = ({
   isOpen,
   handleClose,
-  userId,
 }) => {
+  const [user] = useAuthState(auth)
   const setSnippetState = useSetRecoilState(communityState)
   const [name, setName] = useState('')
   const [charsRemaining, setCharsRemaining] = useState(21)
@@ -73,7 +73,7 @@ const CreateCommunityModal: React.FC<CreateCommunityModalProps> = ({
 
         // create a community
         transaction.set(communityDocRef, {
-          creatorId: userId,
+          creatorId: user?.uid,
           createdAt: serverTimestamp(),
           numberOfMembers: 1,
           privacyType: communityType,
@@ -81,7 +81,7 @@ const CreateCommunityModal: React.FC<CreateCommunityModalProps> = ({
 
         // create communitySnippets on user
         transaction.set(
-          doc(firestore, `users/${userId}/communitySnippets`, name),
+          doc(firestore, `users/${user?.uid}/communitySnippets`, name),
           {
             communityId: name,
             isModerator: true,
