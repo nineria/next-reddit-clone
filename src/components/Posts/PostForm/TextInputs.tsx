@@ -59,7 +59,7 @@ const TextInputs: React.FC<TextInputsProps> = ({
           height='34px'
           padding='0px 30px'
           isDisabled={!textInputs.title}
-          _hover={{ bg: textInputs.title ? 'blue.400' : 'blue.500' }}
+          _hover={{ bg: !textInputs.title ? 'blue.500' : 'blue.400' }}
           isLoading={loading}
           onClick={handleCreatePost}
         >
