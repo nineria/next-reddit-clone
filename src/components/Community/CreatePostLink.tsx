@@ -8,11 +8,13 @@ import { IoImageOutline } from 'react-icons/io5'
 import { useSetRecoilState } from 'recoil'
 import { authModalState } from '../../atoms/authModalAtom'
 import { auth } from '../../firebase/clientApp'
+import useDirectory from '../../hooks/useDirectory'
 
 const CreatePostLink: React.FC = () => {
   const router = useRouter()
   const [user] = useAuthState(auth)
   const setAuthModalState = useSetRecoilState(authModalState)
+  const { toggleMenuOpen } = useDirectory()
 
   const onClick = () => {
     if (!user) {
@@ -20,7 +22,12 @@ const CreatePostLink: React.FC = () => {
       return
     }
     const { communityId } = router.query
-    router.push(`/r/${communityId}/submit`)
+
+    // if user in home page
+    if (communityId) return router.push(`/r/${communityId}/submit`)
+
+    // open directory menu
+    toggleMenuOpen()
   }
 
   return (
