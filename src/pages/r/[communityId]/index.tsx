@@ -11,6 +11,7 @@ import NotFound from '../../../components/Community/NotFound'
 import PageContent from '../../../components/Layout/PageContent'
 import Posts from '../../../components/Posts'
 import { firestore } from '../../../firebase/clientApp'
+
 type CommunityPageProps = {
   communityData: Community
 }
@@ -18,16 +19,16 @@ type CommunityPageProps = {
 const CommunityPage: React.FC<CommunityPageProps> = ({ communityData }) => {
   const setCommunityStateValue = useSetRecoilState(communityState)
 
-  if (!communityData) {
-    return <NotFound />
-  }
-
   useEffect(() => {
     setCommunityStateValue((prev) => ({
       ...prev,
       currentCommunity: communityData,
     }))
-  }, [])
+  }, [communityData])
+
+  if (!communityData) {
+    return <NotFound />
+  }
 
   return (
     <>
@@ -57,7 +58,7 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
     return {
       props: {
         communityData: communityDoc.exists()
-          ? JSON.parse(
+          ? await JSON.parse(
               safeJsonStringify({ id: communityDoc.id, ...communityDoc.data() })
             )
           : '',
