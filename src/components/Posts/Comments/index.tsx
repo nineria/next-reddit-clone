@@ -10,7 +10,6 @@ import { User } from 'firebase/auth'
 import {
   collection,
   doc,
-  getDoc,
   getDocs,
   increment,
   orderBy,
@@ -41,11 +40,12 @@ const Comments: React.FC<CommentsProps> = ({
   const [commentText, setCommentText] = useState('')
   const [comments, setComments] = useState<Comment[]>([])
   const [fetchLoading, setFetchLoading] = useState(true)
-  const [loading, setLoading] = useState(false)
+  const [createLoading, setCreateLoading] = useState(false)
+  const [deleteIdLoading, setDeleteIdLoading] = useState('')
   const setPostState = useSetRecoilState(postState)
 
   const onCreateComment = async () => {
-    setLoading(true)
+    setCreateLoading(true)
     try {
       const batch = writeBatch(firestore)
 
@@ -87,13 +87,39 @@ const Comments: React.FC<CommentsProps> = ({
     } catch (error: any) {
       console.log('onCreateComment error: ', error.message)
     }
-    setLoading(false)
+    setCreateLoading(false)
   }
 
-  const onDeleteComment = async (comment: any) => {
-    // delete comment document
-    // update post numberOfComments - 1
-    // update client recoil state
+  const onDeleteComment = async (comment: Comment) => {
+    setDeleteIdLoading(comment.id)
+    try {
+      const batch = writeBatch(firestore)
+
+      // delete comment document
+      const commentDocRef = doc(firestore, 'comments', comment.id)
+      batch.delete(commentDocRef)
+
+      // update post numberOfComments - 1
+      const postDocRef = doc(firestore, 'posts', selectedPost?.id!)
+      batch.update(postDocRef, {
+        numberOfComments: increment(-1),
+      })
+
+      await batch.commit()
+
+      // update client recoil state
+      setPostState((prev) => ({
+        ...prev,
+        selectedPost: {
+          ...prev.selectedPost,
+          numberOfComments: prev.selectedPost?.numberOfComments! - 1,
+        } as Post,
+      }))
+      setComments((prev) => prev.filter((item) => item.id !== comment.id))
+    } catch (error: any) {
+      console.log('onDeleteComment error: ', error.message)
+    }
+    setDeleteIdLoading('')
   }
 
   const getPostComments = async () => {
@@ -130,13 +156,15 @@ const Comments: React.FC<CommentsProps> = ({
         fontSize='10pt'
         width='100%'
       >
-        <CommentInput
-          commentText={commentText}
-          setCommentText={setCommentText}
-          user={user}
-          loading={loading}
-          onCreateComment={onCreateComment}
-        />
+        {!fetchLoading && (
+          <CommentInput
+            commentText={commentText}
+            setCommentText={setCommentText}
+            user={user}
+            loading={createLoading}
+            onCreateComment={onCreateComment}
+          />
+        )}
       </Flex>
       <Stack spacing={6} p={2}>
         {fetchLoading ? (
@@ -170,7 +198,7 @@ const Comments: React.FC<CommentsProps> = ({
                     key={comment.id}
                     comment={comment}
                     onDeleteComment={onDeleteComment}
-                    loadingDelete={false}
+                    loadingDelete={deleteIdLoading === comment.id}
                     userId={user.uid}
                   />
                 ))}
