@@ -9,6 +9,7 @@ import {
   Text,
 } from '@chakra-ui/react'
 import moment from 'moment'
+import { useRouter } from 'next/router'
 import React, { useState } from 'react'
 import { AiOutlineDelete } from 'react-icons/ai'
 import { BsChat } from 'react-icons/bs'
@@ -45,13 +46,18 @@ const PostItem: React.FC<PostItemProps> = ({
   onDeletePost,
   onSelectPost,
 }) => {
+  const router = useRouter()
+
   const [loadingImage, setLoadingImage] = useState(true)
   const [loadingDelete, setLoadingDelete] = useState(false)
   const [error, setError] = useState(false)
 
   const singlePostPage = !onSelectPost
 
-  const handleDelete = async () => {
+  const handleDelete = async (
+    event: React.MouseEvent<HTMLDivElement, MouseEvent>
+  ) => {
+    event.stopPropagation()
     setLoadingDelete(true)
     try {
       const success = await onDeletePost(post)
@@ -60,6 +66,8 @@ const PostItem: React.FC<PostItemProps> = ({
       }
 
       console.log('Post was successfully deleted')
+
+      if (singlePostPage) router.push(`/r/${post.communityId}`)
     } catch (error: any) {
       console.log('handleDelete error: ', error.message)
       setError(error.message)
