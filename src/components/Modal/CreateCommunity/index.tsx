@@ -24,6 +24,7 @@ import { HiLockClosed } from 'react-icons/hi'
 import { useSetRecoilState } from 'recoil'
 import { communityState } from '../../../atoms/communitiesAtom'
 import { auth, firestore } from '../../../firebase/clientApp'
+import useDirectory from '../../../hooks/useDirectory'
 
 type CreateCommunityModalProps = {
   isOpen: boolean
@@ -42,6 +43,7 @@ const CreateCommunityModal: React.FC<CreateCommunityModalProps> = ({
   const [communityType, setCommunityType] = useState('public')
   const [loading, setLoading] = useState(false)
   const router = useRouter()
+  const { toggleMenuOpen } = useDirectory()
 
   const handleChange = ({
     target: { value },
@@ -88,6 +90,10 @@ const CreateCommunityModal: React.FC<CreateCommunityModalProps> = ({
           }
         )
       })
+
+      handleClose()
+      toggleMenuOpen()
+      router.push(`/r/${name}`)
     } catch (error: any) {
       console.log('handleCreateCommunity Error: ', error.message)
       setNameError(error.message)
@@ -97,8 +103,7 @@ const CreateCommunityModal: React.FC<CreateCommunityModalProps> = ({
       ...prev,
       mySnippets: [],
     }))
-    handleClose()
-    router.push(`/r/${name}`)
+
     setLoading(false)
   }
 

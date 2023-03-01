@@ -1,4 +1,4 @@
-import { Button } from '@chakra-ui/react'
+import { Button, Stack } from '@chakra-ui/react'
 import React from 'react'
 import { useSetRecoilState } from 'recoil'
 import { authModalState } from '../../../atoms/authModalAtom'
@@ -6,7 +6,7 @@ import { authModalState } from '../../../atoms/authModalAtom'
 const AuthButtons: React.FC = () => {
   const setAuthModalState = useSetRecoilState(authModalState)
   return (
-    <>
+    <Stack direction='row'>
       <Button
         variant='outline'
         height='28px'
@@ -26,7 +26,7 @@ const AuthButtons: React.FC = () => {
       >
         Sign Up
       </Button>
-    </>
+    </Stack>
   )
 }
 export default AuthButtons
